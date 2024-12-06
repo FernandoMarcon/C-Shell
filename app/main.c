@@ -2,7 +2,7 @@
 #include <string.h>
 
 int main() {
-    while (true) {
+    while (1) {
 
       // Uncomment this block to pass the first stage
       printf("$ ");
