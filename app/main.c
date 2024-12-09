@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 
-char builtin[3][10] = {"echo","exit","type"};
-int  num_builtin = 3;
-
 int starts_with(const char *str, const char *prefix) {
     return strncmp(str, prefix, strlen(prefix));
 }
@@ -17,6 +14,21 @@ char* get_args(const char *input, const char *command) {
     args[end_idx - start_idx] = '\0';
 
     return args;
+}
+
+int is_builtin (char *input, char *args) {
+    char builtin[3][10] = {"echo","exit","type"};
+    int  num_builtin = 3;
+    
+    int found = 0;
+      
+    for (int i = 0; i < num_builtin; i++) {
+        if (strcmp(builtin[i], args) == 0) {
+            found = 1;
+            break;
+        }
+    }
+    return found;
 }
 
 int main() {
@@ -39,19 +51,13 @@ int main() {
 
       } else if (starts_with(input, "type") == 0) {
           char *args = get_args(input, "type");
-          int found = 0;
           
-          for (int i = 0; i < num_builtin; i++) {
-              if (strcmp(builtin[i], args) == 0) {
-                  found = 1;
-                  break;
-              }
-          } 
-          if (found) {
+          if (is_builtin(input, args)) {
               printf("%s is a shell builtin\n", args);
           } else {
-            printf("%s: not found\n", args);
+              printf("%s: not found\n", args);
           }          
+
       } else {
           printf("%s: command not found\n", input);
       }
