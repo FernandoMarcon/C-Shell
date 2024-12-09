@@ -33,7 +33,7 @@ int main() {
           break;
       } else if (starts_with(input, "echo") == 0) {
           char *args = get_args(input, "echo");
-          printf("args: %s\n", args);
+          printf("%s\n", args);
       } else {
           printf("%s: command not found\n", input);
       }
