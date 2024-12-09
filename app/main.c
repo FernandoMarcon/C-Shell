@@ -33,21 +33,21 @@ int is_builtin (char *input, char *args) {
     return found;
 }
 
-/* int file_exists ( const char *path ) { */
-/*     FILE *file = fopen(path, "r"); */
-/*     if (file != NULL) { */
-/*         fclose(file); */
-/*         return 1; */
-/*     } */
-/*     return 0; */
-/* } */
+int file_exists ( const char *path ) {
+    FILE *file = fopen(path, "r");
+    if (file != NULL) {
+        fclose(file);
+        return 1;
+    }
+    return 0;
+}
 
-/* int command_in_dir(const char *command, const char *dir) { */
-/*     char full_path[1024]; */
-/*     snprintf(full_path, sizeof(full_path), "%s%s", dir, command); */
+int command_in_dir(const char *command, const char *dir) {
+    char full_path[1024];
+    snprintf(full_path, sizeof(full_path), "%s%s", dir, command);
 
-/*     return file_exists(full_path); */
-/* } */
+    return file_exists(full_path);
+}
 
 char* find_command_path(const char* command) {
     char *path = getenv("PATH");
@@ -93,12 +93,15 @@ int main() {
       } else if (starts_with(input, "type") == 0) {
           char *cmd = get_args(input, "type");
           char *cmd_path = find_command_path(cmd);
-          if (cmd_path){
-              printf("%s is %s\n", cmd, cmd_path);
+
+          if (is_builtin(input, cmd)) {
+              printf("%s is a shell builtin\n", cmd);
+          } else if (cmd_path) {
+              printf("%s is %s\n",cmd, cmd_path);
               free(cmd_path);
           } else {
               printf("%s: not found\n", cmd);
-          }
+          }          
 
       } else {
           printf("%s: command not found\n", input);
