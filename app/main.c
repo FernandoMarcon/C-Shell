@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/* #include <unistd.h> */
+#include <unistd.h>
 
 // Structure to hold the commands and its args
 typedef struct {
@@ -31,7 +31,7 @@ Input parse_input(const char* input) {
 
 // Function for checking if the CMD is builtin
 int is_builtin (const char* cmd) {
-    char builtin[3][10] = {"echo","type", "exit"};
+    char builtin[4][10] = {"echo","type", "exit", "pwd"};
     int num_builtin = sizeof(builtin)/sizeof(builtin[0]);
     
     for (int i = 0; i < num_builtin; i++) {
@@ -85,6 +85,24 @@ char* cmd_in_path(const char* cmd) {
     return NULL;
 }
 
+// Get current dir
+int pwd() {
+    // Option 1 (NOT WORKING)
+    /* char *cwd = get_current_dir_name(); */
+    /* return cwd; */
+
+    // Option 2 (NOT WORKING)
+    /* char cwd[PATH_MAX+1]; */
+    /* if (getcwd(cwd, sizeof(cwd)) != NULL) { */
+    /*     return cwd; */
+    /* } */
+    /* return NULL; */
+
+    // Option 3 (WORKAROUND)
+    system("pwd");
+    return 0;
+}
+
 int main() {
 
     while (1) {
@@ -112,17 +130,26 @@ int main() {
         if (strcmp(parsed.cmd, "exit") == 0) {
             break;
         } else if (strcmp(parsed.cmd, "type") == 0) {
-            char *args_path = cmd_in_path(parsed.args);
+            if (parsed.args != NULL){
 
-            if (is_builtin(parsed.args)) {
-                printf("%s is a shell builtin\n", parsed.args);
+                char *args_path = cmd_in_path(parsed.args);
 
-            } else if (args_path != NULL) {
+                if (is_builtin(parsed.args)) {
+                    printf("%s is a shell builtin\n", parsed.args);
 
-                printf("%s is %s\n", parsed.args, args_path);
-            } else {
-                printf("%s: not found\n", parsed.args);
+                } else if (args_path != NULL) {
+
+                    printf("%s is %s\n", parsed.args, args_path);
+                } else {
+                    printf("%s: not found\n", parsed.args);
+                }
             }
+        } else if (strcmp(parsed.cmd, "pwd") == 0) {
+            /* char *my_dir = pwd(); */
+            /* printf("%s\n", my_dir); */
+            /* free(my_dir); */
+            pwd();
+
         } else if (cmd_path != NULL) {
             /* printf("run: %s\n", cmd_path); */
             system(input);
