@@ -113,10 +113,13 @@ int main() {
             break;
         } else if (strcmp(parsed.cmd, "type") == 0) {
             char *args_path = cmd_in_path(parsed.args);
+
             if (is_builtin(parsed.args)) {
                 printf("%s is a shell builtin\n", parsed.args);
+
             } else if (args_path != NULL) {
-                printf("%s is %s\n", parsed.cmd, args_path);
+
+                printf("%s is %s\n", parsed.args, args_path);
             } else {
                 printf("%s: not found\n", parsed.args);
             }
