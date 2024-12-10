@@ -1,40 +1,62 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <string.h>
+/* #include <unistd.h> */
 
-int starts_with(const char *str, const char *prefix) {
-    return strncmp(str, prefix, strlen(prefix));
-}
+// Structure to hold the commands and its args
+typedef struct {
+    char* cmd;
+    char* args;
+} Input;
 
-char* get_args(const char *input, const char *command) {
-    static char args[100];
-    size_t start_idx = strlen(command) + 1;
-    size_t end_idx   = strlen(input);
-
-    memcpy(args, input+start_idx, end_idx - start_idx);
-    args[end_idx - start_idx] = '\0';
-
-    return args;
-}
-
-int is_builtin (char *input, char *args) {
-    char builtin[3][10] = {"echo","exit","type"};
-    int  num_builtin = 3;
+// Function for parsing the input, and extracts the cmds and args
+Input parse_input(const char* input) {
+    char* input_copy = strdup(input);
+    Input result = {NULL, NULL};
     
-    int found = 0;
-      
-    for (int i = 0; i < num_builtin; i++) {
-        if (strcmp(builtin[i], args) == 0) {
-            found = 1;
-            break;
+    char* token = strtok(input_copy, " ");
+    if (token) {
+        result.cmd = strdup(token); // Allocate memory for cmd
+        token = strtok(NULL, "\0");
+        if (token) {
+            result.args = strdup(token); // Allocate mem for args
         }
     }
-    return found;
+
+    // Clean up
+    free(input_copy);
+
+    return result;
 }
 
-int file_exists ( const char *path ) {
-    FILE *file = fopen(path, "r");
+// Function for checking if the CMD is builtin
+int is_builtin (const char* cmd) {
+    char builtin[3][10] = {"echo","type", "exit"};
+    int num_builtin = sizeof(builtin)/sizeof(builtin[0]);
+    
+    for (int i = 0; i < num_builtin; i++) {
+        if (strcmp(cmd, builtin[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+        
+// Check if CMD is in PATH
+// 1. INPUT: cmd
+// 2. get PATH var
+// 3. for each path in PATH:
+//      - concat ( path + cmd ) get_cmd_path() => cmd_path
+//      - check: file_exists(cmd_path) => (0,1)
+
+char* get_cmd_path(const char* path, const char* cmd) {
+    char full_path[1024];
+    snprintf(full_path, sizeof(full_path), "%s/%s", path, cmd);
+    return strdup(full_path);
+}
+
+int file_exists(const char* fpath) {
+    FILE *file = fopen(fpath, "r");
     if (file != NULL) {
         fclose(file);
         return 1;
@@ -42,70 +64,76 @@ int file_exists ( const char *path ) {
     return 0;
 }
 
-int command_in_dir(const char *command, const char *dir) {
-    char full_path[1024];
-    snprintf(full_path, sizeof(full_path), "%s%s", dir, command);
-
-    return file_exists(full_path);
-}
-
-char* find_command_path(const char* command) {
+char* cmd_in_path(const char* cmd) {
     char *path = getenv("PATH");
     if (path == NULL) return NULL;
-
+    
     char *path_copy = strdup(path);
     char *dir;
     char full_path[1024];
 
     dir = strtok(path_copy, ":");
-    while ( dir != NULL ) {
-        snprintf(full_path, sizeof(full_path), "%s/%s", dir, command);
-
-        if ( access(full_path, X_OK) == 0 ){
+    while (dir != NULL) {
+        snprintf(full_path, sizeof(full_path), "%s/%s", dir, cmd);
+        if (file_exists(full_path)) {
             free(path_copy);
             return strdup(full_path);
         }
-
         dir = strtok(NULL, ":");
     }
-
     free(path_copy);
     return NULL;
 }
 
 int main() {
+
     while (1) {
+        printf("$ ");
+        fflush(stdout);
 
-      printf("$ ");
-      fflush(stdout);
+        char input[100];
+        fgets(input, sizeof(input), stdin);
 
-      char input[100];
-      fgets(input, 100, stdin);
+        // Parse input
+        input[strlen(input) - 1] = '\0';
+        if (input[0] == '\0') { // Skip empty lines
+            continue;
+        }
 
-      input[strlen(input) - 1] = '\0';
+        Input parsed = parse_input(input);
+        char *cmd_path = cmd_in_path(parsed.cmd);
+        
+        /* printf("INPUT: %s\n", input); */
+        /* printf("CMD: %s\n", parsed.cmd); */
+        /* printf("ARGS: %s\n", parsed.args); */
+        /* printf("CMD PATH: %s\n\n\n", cmd_path); */
+        
+        // Check if CMD is builin
+        if (strcmp(parsed.cmd, "exit") == 0) {
+            break;
+        } else if (strcmp(parsed.cmd, "type") == 0) {
+            char *args_path = cmd_in_path(parsed.args);
+            if (is_builtin(parsed.args)) {
+                printf("%s is a shell builtin\n", parsed.args);
+            } else if (args_path != NULL) {
+                printf("%s is %s\n", parsed.cmd, args_path);
+            } else {
+                printf("%s: not found\n", parsed.args);
+            }
+        } else if (cmd_path != NULL) {
+            /* printf("run: %s\n", cmd_path); */
+            system(input);
+        } else {
+            printf("%s: command not found\n", input);
+        }
+        
+        // Clean up mem
+        free(parsed.cmd);
+        free(parsed.args);
 
-      if (starts_with(input, "exit") == 0){
-          break;
-      } else if (starts_with(input, "echo") == 0) {
-          char *args = get_args(input, "echo");
-          printf("%s\n", args);
-
-      } else if (starts_with(input, "type") == 0) {
-          char *cmd = get_args(input, "type");
-          char *cmd_path = find_command_path(cmd);
-
-          if (is_builtin(input, cmd)) {
-              printf("%s is a shell builtin\n", cmd);
-          } else if (cmd_path) {
-              printf("%s is %s\n",cmd, cmd_path);
-              free(cmd_path);
-          } else {
-              printf("%s: not found\n", cmd);
-          }          
-
-      } else {
-          printf("%s: command not found\n", input);
-      }
     }
-  return 0;
+
+    return 0;
 }
+
+
