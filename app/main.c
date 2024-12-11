@@ -85,24 +85,6 @@ char* cmd_in_path(const char* cmd) {
     return NULL;
 }
 
-// Get current dir
-int pwd() {
-    // Option 1 (NOT WORKING)
-    /* char *cwd = get_current_dir_name(); */
-    /* return cwd; */
-
-    // Option 2 (NOT WORKING)
-    /* char cwd[PATH_MAX+1]; */
-    /* if (getcwd(cwd, sizeof(cwd)) != NULL) { */
-    /*     return cwd; */
-    /* } */
-    /* return NULL; */
-
-    // Option 3 (WORKAROUND)
-    system("pwd");
-    return 0;
-}
-
 int main() {
 
     while (1) {
@@ -145,10 +127,8 @@ int main() {
                 }
             }
         } else if (strcmp(parsed.cmd, "pwd") == 0) {
-            /* char *my_dir = pwd(); */
-            /* printf("%s\n", my_dir); */
-            /* free(my_dir); */
-            pwd();
+            char wd[1024];
+            printf("%s\n", getcwd(wd, sizeof(wd)));
 
         } else if (cmd_path != NULL) {
             /* printf("run: %s\n", cmd_path); */
