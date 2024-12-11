@@ -131,7 +131,9 @@ int main() {
             printf("%s\n", getcwd(wd, sizeof(wd)));
 
         } else if (strcmp(parsed.cmd, "cd") == 0) {
-            chdir(parsed.args);
+            if (chdir(parsed.args) != 0){
+                printf("cd: %s: No such file or directory\n", parsed.args);
+            } 
         } else if (cmd_path != NULL) {
             /* printf("run: %s\n", cmd_path); */
             system(input);
