@@ -131,9 +131,24 @@ int main() {
             printf("%s\n", getcwd(wd, sizeof(wd)));
 
         } else if (strcmp(parsed.cmd, "cd") == 0) {
-            if (chdir(parsed.args) != 0){
-                printf("cd: %s: No such file or directory\n", parsed.args);
-            } 
+            char *path;
+            
+            if (strcmp(parsed.args, "~") == 0){
+                path = getenv("HOME");
+            } else {
+                path = strdup(parsed.args);
+            }
+
+            if (path == NULL) {
+                fprintf(stderr, "cd: Unable to determine path\n");
+                break;
+            }
+
+            if (chdir(path) != 0) {
+                /* perror("cd: No such file or directory\n"); */
+                printf("cd: %s: No such file or directory\n", path);
+            }
+
         } else if (cmd_path != NULL) {
             /* printf("run: %s\n", cmd_path); */
             system(input);
