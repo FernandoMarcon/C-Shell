@@ -130,6 +130,8 @@ int main() {
             char wd[1024];
             printf("%s\n", getcwd(wd, sizeof(wd)));
 
+        } else if (strcmp(parsed.cmd, "cd") == 0) {
+            chdir(parsed.args);
         } else if (cmd_path != NULL) {
             /* printf("run: %s\n", cmd_path); */
             system(input);
