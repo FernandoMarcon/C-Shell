@@ -151,6 +151,7 @@ int main() {
 
         } else if (cmd_path != NULL) {
             /* printf("run: %s\n", cmd_path); */
+            printf("running system\n");
             system(input);
         } else {
             printf("%s: command not found\n", input);
