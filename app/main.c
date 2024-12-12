@@ -11,21 +11,51 @@ typedef struct {
 
 // Function for parsing the input, and extracts the cmds and args
 Input parse_input(const char* input) {
-    char* input_copy = strdup(input);
     Input result = {NULL, NULL};
-    
-    char* token = strtok(input_copy, " ");
-    if (token) {
-        result.cmd = strdup(token); // Allocate memory for cmd
-        token = strtok(NULL, "\0");
+    char* input_copy = strdup(input);
+    int len = strlen(input_copy);
+
+    // Skip leading whitespace
+    char* start = input_copy;
+    while (*start && (*start == ' ' || *start == '\t')) start++;
+
+    // Check if starts with quote
+    char quote = (*start == '\'' || *start == '"') ? *start : '\0';
+    char* cmd_start = quote ? start + 1 : start;
+
+    // Find end of command
+    char* cmd_end;
+    if (quote) {
+        cmd_end = strchr(cmd_start, quote);
+        if (!cmd_end) {
+            // Unbalanced quote
+            free(input_copy);
+            return result;
+        }
+        *cmd_end = '\0'; // Terminate cmd
+        result.cmd = strdup(cmd_start);
+
+        // Find start of args (after closing quote)
+        char* args_start = cmd_end +1;
+        while (*args_start && *args_start == ' ') args_start++;
+        if (*args_start) {
+            result.args = strdup(args_start);
+        }
+    } else {
+        // Regular space-separated parsing
+        char* token = strtok(input_copy, " ");
         if (token) {
-            result.args = strdup(token); // Allocate mem for args
+            result.cmd = strdup(token); // Allocate memory for cmd
+            token = strtok(NULL, "\0");
+            if (token) {
+                result.args = strdup(token); // Allocate mem for args
+            }
         }
     }
+    
 
     // Clean up
     free(input_copy);
-
     return result;
 }
 
