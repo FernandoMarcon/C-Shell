@@ -175,13 +175,10 @@ int main() {
             }
 
             if (chdir(path) != 0) {
-                /* perror("cd: No such file or directory\n"); */
                 printf("cd: %s: No such file or directory\n", path);
             }
 
         } else if (cmd_path != NULL) {
-            /* printf("run: %s\n", cmd_path); */
-            /* printf("running system\n"); */
             system(input);
         } else {
             printf("%s: command not found\n", input);
